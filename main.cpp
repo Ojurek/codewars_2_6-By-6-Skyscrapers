@@ -57,6 +57,7 @@ PuzzleBoard::PuzzleBoard(const std::vector<int> &clues)
                     removeSize(board, j, i, BOARD_SIZE - k);
             }
         }
+
         //check left clue
         if (leftClue[i] == 1)
         {
@@ -114,9 +115,41 @@ void PuzzleBoard::setClueArray(const std::vector<int> &clues)
 
 void PuzzleBoard::removeSize(Board &board, int row, int column, int removeThisSize)
 {
+    //std::cout << "remove: " << removeThisSize << " row: " << row << " Column: " << column << std::endl;
     int sizesBeforeErasing = board[row][column].size();
+    if (sizesBeforeErasing == 1)
+    {
+        return;
+    }
+
     board[row][column].erase(std::remove(board[row][column].begin(), board[row][column].end(), removeThisSize), board[row][column].end());
     totalSizes = totalSizes + board[row][column].size() - sizesBeforeErasing;
+
+    if (board[row][column].size() == 1)
+    {
+
+        for (int i = 0; i < row; i++)
+        {
+            removeSize(board, i, column, board[row][column][0]);
+        }
+
+        for (int i = row + 1; i < BOARD_SIZE; i++)
+        {
+            removeSize(board, i, column, board[row][column][0]);
+        }
+
+        for (int i = 0; i < column; i++)
+        {
+            removeSize(board, row, i, board[row][column][0]);
+        }
+
+        for (int i = column + 1; i < BOARD_SIZE; i++)
+        {
+            removeSize(board, row, i, board[row][column][0]);
+        }
+
+        std::cout << std::endl;
+    }
 }
 
 void PuzzleBoard::printBoard()
