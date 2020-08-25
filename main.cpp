@@ -22,7 +22,7 @@ public:
 
     PuzzleBoard(const std::vector<int> &clues);
     void setClueArray(const std::vector<int> &clues);
-    void removeSize(Field &field, int size);
+    void removeSize(Board &board, int row, int column, int removeThisSize);
     void printBoard();
 };
 
@@ -54,7 +54,7 @@ PuzzleBoard::PuzzleBoard(const std::vector<int> &clues)
             for (int j = 0; j < (upperClue[i] - 1); j++)
             {
                 for (int k = 0; k < (upperClue[i] - j - 1); k++)
-                    removeSize(board[j][i], BOARD_SIZE - k);
+                    removeSize(board, j, i, BOARD_SIZE - k);
             }
         }
         //check left clue
@@ -67,7 +67,7 @@ PuzzleBoard::PuzzleBoard(const std::vector<int> &clues)
             for (int j = 0; j < (leftClue[i] - 1); j++)
             {
                 for (int k = 0; k < (leftClue[i] - j - 1); k++)
-                    removeSize(board[i][j], BOARD_SIZE - k);
+                    removeSize(board, i, j, BOARD_SIZE - k);
             }
         }
         //check right clue
@@ -80,7 +80,7 @@ PuzzleBoard::PuzzleBoard(const std::vector<int> &clues)
             for (int j = 0; j < (rightClue[i] - 1); j++)
             {
                 for (int k = 0; k < (rightClue[i] - j - 1); k++)
-                    removeSize(board[i][BOARD_SIZE - j - 1], BOARD_SIZE - k);
+                    removeSize(board, i, BOARD_SIZE - j - 1, BOARD_SIZE - k);
             }
         }
         //check down clue
@@ -93,7 +93,7 @@ PuzzleBoard::PuzzleBoard(const std::vector<int> &clues)
             for (int j = 0; j < (downClue[i] - 1); j++)
             {
                 for (int k = 0; k < (downClue[i] - j - 1); k++)
-                    removeSize(board[BOARD_SIZE - j - 1][i], BOARD_SIZE - k);
+                    removeSize(board, BOARD_SIZE - j - 1, i, BOARD_SIZE - k);
             }
         }
     }
@@ -112,11 +112,11 @@ void PuzzleBoard::setClueArray(const std::vector<int> &clues)
     }
 }
 
-void PuzzleBoard::removeSize(Field &field, int size)
+void PuzzleBoard::removeSize(Board &board, int row, int column, int removeThisSize)
 {
-    int sizesBeforeErasing = field.size();
-    field.erase(std::remove(field.begin(), field.end(), size), field.end());
-    totalSizes = totalSizes + field.size() - sizesBeforeErasing;
+    int sizesBeforeErasing = board[row][column].size();
+    board[row][column].erase(std::remove(board[row][column].begin(), board[row][column].end(), removeThisSize), board[row][column].end());
+    totalSizes = totalSizes + board[row][column].size() - sizesBeforeErasing;
 }
 
 void PuzzleBoard::printBoard()
