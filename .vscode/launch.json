@@ -5,13 +5,17 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "(gdb) Dołącz",
+            "name": "(gdb) Launch",
             "type": "cppdbg",
-            "request": "attach",
-            "program": "wprowadź nazwę programu, na przykład ${workspaceFolder}/a.exe",
-            "processId": "${command:pickProcess}",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
             "MIMode": "gdb",
-            "miDebuggerPath": "/path/to/gdb",
+            "miDebuggerPath": "C:\\MinGw\\bin\\gdb.exe",
             "setupCommands": [
                 {
                     "description": "Włącz formatowanie kodu dla gdb",
@@ -20,16 +24,5 @@
                 }
             ]
         },
-        {
-            "name": "(Windows) Launch",
-            "type": "cppvsdbg",
-            "request": "launch",
-            "program": "wprowadź nazwę programu, na przykład ${workspaceFolder}/a.exe",
-            "args": [],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}",
-            "environment": [],
-            "externalConsole": false
-        }
     ]
 }
