@@ -13,6 +13,13 @@ typedef std::vector<Row> Board;
 
 static Board finalBoard;
 
+enum class Result
+{
+    Wrong,
+    Ok,
+    Finish
+};
+
 class PuzzleBoard
 {
 private:
@@ -29,7 +36,9 @@ public:
 
     PuzzleBoard(const std::vector<int> &clues);
     void setClueArray(const std::vector<int> &clues);
-    bool removeSize(int row, int column, int removeThisSize);
+    Result removeSize(int row, int column, int removeThisSize);
+    Result setSize(int row, int column, int setThisSize);
+    bool checkAfterReduction(int row, int column);
     bool checkRow(int row);
     bool checkColumn(int column);
     void printBoard();
@@ -62,10 +71,7 @@ PuzzleBoard::PuzzleBoard(const std::vector<int> &clues)
         //check upper clue
         if (upperClue[i] == 1)
         {
-            for (int j = 1; j < BOARD_SIZE; j++)
-            {
-                removeSize(0, i, j);
-            }
+            setSize(0, i, BOARD_SIZE);
         }
         if (upperClue[i] > 1)
         {
@@ -79,10 +85,7 @@ PuzzleBoard::PuzzleBoard(const std::vector<int> &clues)
         //check left clue
         if (leftClue[i] == 1)
         {
-            for (int j = 1; j < BOARD_SIZE; j++)
-            {
-                removeSize(i, 0, j);
-            }
+            setSize(i, 0, BOARD_SIZE);
         }
         if (leftClue[i] > 1)
         {
@@ -95,10 +98,7 @@ PuzzleBoard::PuzzleBoard(const std::vector<int> &clues)
         //check right clue
         if (rightClue[i] == 1)
         {
-            for (int j = 1; j < BOARD_SIZE; j++)
-            {
-                removeSize(i, (BOARD_SIZE - 1), j);
-            }
+            setSize(i, (BOARD_SIZE - 1), BOARD_SIZE);
         }
         if (rightClue[i] > 1)
         {
@@ -111,10 +111,7 @@ PuzzleBoard::PuzzleBoard(const std::vector<int> &clues)
         //check down clue
         if (downClue[i] == 1)
         {
-            for (int j = 1; j < BOARD_SIZE; j++)
-            {
-                removeSize((BOARD_SIZE - 1), i, j);
-            }
+            setSize((BOARD_SIZE - 1), i, BOARD_SIZE);
         }
         if (downClue[i] > 1)
         {
@@ -140,25 +137,68 @@ void PuzzleBoard::setClueArray(const std::vector<int> &clues)
     }
 }
 
-bool PuzzleBoard::removeSize(int row, int column, int removeThisSize)
+Result PuzzleBoard::removeSize(int row, int column, int removeThisSize)
 {
     int deletedElements;
     //std::cout << "remove: " << removeThisSize << " row: " << row << " Column: " << column << std::endl;
     int sizesBeforeErasing = board[row][column].size();
     if (sizesBeforeErasing == 1)
     {
-        return true; //misleading
+        return Result::Ok;
     }
-    printBoard();
-    board[row][column].erase(std::remove(board[row][column].begin(), board[row][column].end(), removeThisSize), board[row][column].end());
 
+    board[row][column].erase(std::remove(board[row][column].begin(), board[row][column].end(), removeThisSize), board[row][column].end());
+    //printBoard();
     deletedElements = sizesBeforeErasing - board[row][column].size();
     assert((deletedElements == 0) || (deletedElements == 1));
     totalSizes -= deletedElements;
     rowSizes[row] -= deletedElements;
     columnSizes[column] -= deletedElements;
 
-    if ((deletedElements > 0) && (rowSizes[row] == BOARD_SIZE))
+    if (deletedElements > 0)
+    {
+        if (checkAfterReduction(row, column) == false)
+        {
+            return Result::Wrong;
+        }
+
+        if (totalSizes == (BOARD_SIZE * BOARD_SIZE))
+        {
+            return Result::Finish;
+        }
+    }
+
+    return Result::Ok;
+}
+
+Result PuzzleBoard::setSize(int row, int column, int setThisSize)
+{
+
+    int deletedElements = board[row][column].size() - 1;
+
+    board[row][column] = {setThisSize};
+
+    totalSizes -= deletedElements;
+    rowSizes[row] -= deletedElements;
+    columnSizes[column] -= deletedElements;
+
+    if (checkAfterReduction(row, column) == false)
+    {
+        return Result::Wrong;
+    }
+
+    if (totalSizes == (BOARD_SIZE * BOARD_SIZE))
+    {
+        return Result::Finish;
+    }
+
+    return Result::Ok;
+}
+
+bool PuzzleBoard::checkAfterReduction(int row, int column)
+{
+
+    if (rowSizes[row] == BOARD_SIZE)
     {
         if (checkRow(row) == false)
         {
@@ -166,7 +206,7 @@ bool PuzzleBoard::removeSize(int row, int column, int removeThisSize)
         }
     }
 
-    if ((deletedElements > 0) && (columnSizes[column] == BOARD_SIZE))
+    if (columnSizes[column] == BOARD_SIZE)
     {
         if (checkColumn(column) == false)
         {
@@ -174,13 +214,11 @@ bool PuzzleBoard::removeSize(int row, int column, int removeThisSize)
         }
     }
 
-    std::cout << " Total Sizes = " << totalSizes << std::endl;
-
-    if ((deletedElements > 0) && (board[row][column].size() == 1))
+    if (board[row][column].size() == 1)
     {
         for (int i = 0; i < row; i++)
         {
-            if (removeSize(i, column, board[row][column][0]) == false)
+            if (removeSize(i, column, board[row][column][0]) == Result::Wrong)
             {
                 return false;
             }
@@ -188,7 +226,7 @@ bool PuzzleBoard::removeSize(int row, int column, int removeThisSize)
 
         for (int i = row + 1; i < BOARD_SIZE; i++)
         {
-            if (removeSize(i, column, board[row][column][0]) == false)
+            if (removeSize(i, column, board[row][column][0]) == Result::Wrong)
             {
                 return false;
             }
@@ -196,7 +234,7 @@ bool PuzzleBoard::removeSize(int row, int column, int removeThisSize)
 
         for (int i = 0; i < column; i++)
         {
-            if (removeSize(row, i, board[row][column][0]) == false)
+            if (removeSize(row, i, board[row][column][0]) == Result::Wrong)
             {
                 return false;
             }
@@ -204,14 +242,13 @@ bool PuzzleBoard::removeSize(int row, int column, int removeThisSize)
 
         for (int i = column + 1; i < BOARD_SIZE; i++)
         {
-            if (removeSize(row, i, board[row][column][0]) == false)
+            if (removeSize(row, i, board[row][column][0]) == Result::Wrong)
             {
                 return false;
             }
         }
-
-        std::cout << std::endl;
     }
+
     return true;
 }
 
@@ -356,66 +393,72 @@ void PuzzleBoard::printBoard()
     }
 }
 
-bool reduceElement(PuzzleBoard temp_board)
+Result reduceElement(PuzzleBoard temp_board)
 {
     int sizes_in_field;
+    int row;
+    int column;
+    Field reduced_field;
+    Result operation_result;
     PuzzleBoard new_board = temp_board;
-    bool breaked = false;
 
-    for (int i = 0; i < BOARD_SIZE; i++)
-    {
-        for (int j = 0; j < BOARD_SIZE; j++)
+    [&] {
+        for (int i = 0; i < BOARD_SIZE; i++)
         {
-            sizes_in_field = temp_board.board[i][j].size();
-            if (sizes_in_field > 1)
+            for (int j = 0; j < BOARD_SIZE; j++)
             {
-                for (int k = 0; k < sizes_in_field; k++)
+                sizes_in_field = temp_board.board[i][j].size();
+                if (sizes_in_field > 1)
                 {
-
-                    for (int l = 0; l < sizes_in_field; l++)
-                    {
-                        if (k != l)
-                        {
-                            std::cout << std::endl
-                                      << "For row: " << i << " For column: " << j << " remove=" << temp_board.board[i][j][l] << std::endl;
-                            if (new_board.removeSize(i, j, temp_board.board[i][j][l]) == false)
-                            {
-                                new_board = temp_board;
-                                breaked = true;
-                                break;
-                            }
-                        }
-                    }
-
-                    std::cout << std::endl
-                              << "For row: " << i << " For column: " << j << " sizes_in_field=" << sizes_in_field << std::endl;
-                    new_board.printBoard();
-                    if (breaked != true)
-                    {
-                        if (new_board.totalSizes == BOARD_SIZE * BOARD_SIZE)
-                        {
-                            finalBoard = new_board.board;
-                            return true;
-                        }
-                        if (reduceElement(new_board) == false)
-                        {
-                            std::cout << "reduce element returned false********************************" << std::endl;
-                            //return false;
-                        }
-                        else if (new_board.totalSizes == BOARD_SIZE * BOARD_SIZE)
-                        {
-                            finalBoard = new_board.board;
-                            return true;
-                        }
-                    }
-                    new_board = temp_board;
-                    breaked = false;
+                    row = i;
+                    column = j;
+                    reduced_field = temp_board.board[i][j];
+                    return;
                 }
-                std::cout << "all elements for row " << i << ", column " << j << " tested" << std::endl;
-                return false;
             }
         }
+    }();
+
+    for (int size : reduced_field)
+    {
+        new_board = temp_board;
+        operation_result = new_board.setSize(row, column, size);
+
+        if (new_board.board[0][0][0] == 2)
+        {
+            std::cout << "pierwszy prawidłowy" << std::endl;
+        }
+
+        std::cout << std::endl
+                  << "For row: " << row << " For column: " << column << " set=" << size << std::endl;
+        new_board.printBoard();
+        if (operation_result == Result::Wrong)
+        {
+            continue;
+        }
+
+        if (operation_result == Result::Finish)
+        {
+            return Result::Finish;
+        }
+
+        if (new_board.totalSizes == BOARD_SIZE * BOARD_SIZE)
+        {
+            finalBoard = new_board.board;
+
+            std::cout << "Final board *******************************************" << std::endl;
+            //new_board.printBoard();
+            return Result::Finish;
+        }
+
+        operation_result == reduceElement(new_board);
+
+        if (operation_result == Result::Finish)
+        {
+            return Result::Finish;
+        }
     }
+    return Result::Wrong;
 }
 
 std::vector<std::vector<int>> SolvePuzzle(const std::vector<int> &clues)
