@@ -41,5 +41,6 @@
         "xutility": "cpp",
         "array": "cpp",
         "iterator": "cpp"
-    }
+    },
+    "C_Cpp.errorSquiggles": "Enabled"
 }

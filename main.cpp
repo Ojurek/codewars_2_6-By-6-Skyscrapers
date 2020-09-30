@@ -11,7 +11,9 @@ typedef std::vector<int> Field;
 typedef std::vector<Field> Row;
 typedef std::vector<Row> Board;
 
-static Board finalBoard;
+static std::vector<std::vector<int>> finalBoard;
+static int iteration = 0;
+static int iterationr = 0;
 
 enum class Result
 {
@@ -41,12 +43,19 @@ public:
     bool checkAfterReduction(int row, int column);
     bool checkRow(int row);
     bool checkColumn(int column);
+    void finish();
     void printBoard();
 };
 
 PuzzleBoard::PuzzleBoard(const std::vector<int> &clues)
 {
+    std::cout << "Constructor" << std::endl;
+
     Field field;
+
+    finalBoard.clear();
+    std::cout << " size of final board: " << finalBoard.size() << std::endl;
+
     for (int i = 0; i < BOARD_SIZE; i++)
     {
         field.push_back(i + 1);
@@ -122,7 +131,6 @@ PuzzleBoard::PuzzleBoard(const std::vector<int> &clues)
             }
         }
     }
-
     printBoard();
 }
 
@@ -139,8 +147,8 @@ void PuzzleBoard::setClueArray(const std::vector<int> &clues)
 
 Result PuzzleBoard::removeSize(int row, int column, int removeThisSize)
 {
+    iteration++;
     int deletedElements;
-    //std::cout << "remove: " << removeThisSize << " row: " << row << " Column: " << column << std::endl;
     int sizesBeforeErasing = board[row][column].size();
     if (sizesBeforeErasing == 1)
     {
@@ -148,9 +156,8 @@ Result PuzzleBoard::removeSize(int row, int column, int removeThisSize)
     }
 
     board[row][column].erase(std::remove(board[row][column].begin(), board[row][column].end(), removeThisSize), board[row][column].end());
-    //printBoard();
+
     deletedElements = sizesBeforeErasing - board[row][column].size();
-    assert((deletedElements == 0) || (deletedElements == 1));
     totalSizes -= deletedElements;
     rowSizes[row] -= deletedElements;
     columnSizes[column] -= deletedElements;
@@ -164,6 +171,12 @@ Result PuzzleBoard::removeSize(int row, int column, int removeThisSize)
 
         if (totalSizes == (BOARD_SIZE * BOARD_SIZE))
         {
+            if (finalBoard.size() != (BOARD_SIZE))
+            {
+                std::cout << "Finisch*****************" << std::endl;
+                finish();
+            }
+
             return Result::Finish;
         }
     }
@@ -191,12 +204,12 @@ Result PuzzleBoard::setSize(int row, int column, int setThisSize)
     {
         return Result::Finish;
     }
-
     return Result::Ok;
 }
 
 bool PuzzleBoard::checkAfterReduction(int row, int column)
 {
+    Result result;
 
     if (rowSizes[row] == BOARD_SIZE)
     {
@@ -216,35 +229,31 @@ bool PuzzleBoard::checkAfterReduction(int row, int column)
 
     if (board[row][column].size() == 1)
     {
-        for (int i = 0; i < row; i++)
+        for (int i = 0; i < BOARD_SIZE; i++)
         {
-            if (removeSize(i, column, board[row][column][0]) == Result::Wrong)
+            result = (removeSize(i, column, board[row][column][0]));
+            if (result == Result::Wrong)
             {
                 return false;
             }
-        }
 
-        for (int i = row + 1; i < BOARD_SIZE; i++)
-        {
-            if (removeSize(i, column, board[row][column][0]) == Result::Wrong)
+            if (result == Result::Finish)
             {
-                return false;
+                return true;
             }
         }
 
-        for (int i = 0; i < column; i++)
+        for (int i = 0; i < BOARD_SIZE; i++)
         {
-            if (removeSize(row, i, board[row][column][0]) == Result::Wrong)
+            result = removeSize(row, i, board[row][column][0]);
+            if (result == Result::Wrong)
             {
                 return false;
             }
-        }
 
-        for (int i = column + 1; i < BOARD_SIZE; i++)
-        {
-            if (removeSize(row, i, board[row][column][0]) == Result::Wrong)
+            if (result == Result::Finish)
             {
-                return false;
+                return true;
             }
         }
     }
@@ -254,8 +263,6 @@ bool PuzzleBoard::checkAfterReduction(int row, int column)
 
 bool PuzzleBoard::checkRow(int row)
 {
-    std::cout << std::endl
-              << "checkRow: " << row << std::endl;
     std::set<int> allSizes;
     int highestSeenBuilding = 0;
     int numberOfSeenBuildings = 0;
@@ -305,8 +312,6 @@ bool PuzzleBoard::checkRow(int row)
 
 bool PuzzleBoard::checkColumn(int column)
 {
-    std::cout << std::endl
-              << "checkColumn " << column << std::endl;
     std::set<int> allSizes;
     int highestSeenBuilding = 0;
     int numberOfSeenBuildings = 0;
@@ -355,6 +360,25 @@ bool PuzzleBoard::checkColumn(int column)
     return true;
 }
 
+void PuzzleBoard::finish()
+{
+    for (int i = 0; i < BOARD_SIZE; i++)
+    {
+        std::vector<int> myRow;
+        for (int j = 0; j < BOARD_SIZE; j++)
+        {
+            myRow.push_back(board[i][j][0]);
+            std::cout << myRow[j] << ',';
+        }
+        std::cout << std::endl;
+        finalBoard.push_back(myRow);
+        myRow.clear();
+    }
+    std::cout << "Final board inside finish*******************************************" << std::endl;
+    std::cout << " size of final board: " << finalBoard.size() << std::endl;
+    printBoard();
+}
+
 void PuzzleBoard::printBoard()
 {
     std::cout << std::endl
@@ -395,6 +419,9 @@ void PuzzleBoard::printBoard()
 
 Result reduceElement(PuzzleBoard temp_board)
 {
+    if (iterationr > 2554)
+        temp_board.printBoard();
+    iterationr++;
     int sizes_in_field;
     int row;
     int column;
@@ -403,17 +430,20 @@ Result reduceElement(PuzzleBoard temp_board)
     PuzzleBoard new_board = temp_board;
 
     [&] {
-        for (int i = 0; i < BOARD_SIZE; i++)
+        for (int k = 2; k < BOARD_SIZE; k++)
         {
-            for (int j = 0; j < BOARD_SIZE; j++)
+            for (int i = 0; i < BOARD_SIZE; i++)
             {
-                sizes_in_field = temp_board.board[i][j].size();
-                if (sizes_in_field > 1)
+                for (int j = 0; j < BOARD_SIZE; j++)
                 {
-                    row = i;
-                    column = j;
-                    reduced_field = temp_board.board[i][j];
-                    return;
+                    sizes_in_field = temp_board.board[i][j].size();
+                    if (sizes_in_field == k)
+                    {
+                        row = i;
+                        column = j;
+                        reduced_field = temp_board.board[i][j];
+                        return;
+                    }
                 }
             }
         }
@@ -424,14 +454,6 @@ Result reduceElement(PuzzleBoard temp_board)
         new_board = temp_board;
         operation_result = new_board.setSize(row, column, size);
 
-        if (new_board.board[0][0][0] == 2)
-        {
-            std::cout << "pierwszy prawidłowy" << std::endl;
-        }
-
-        std::cout << std::endl
-                  << "For row: " << row << " For column: " << column << " set=" << size << std::endl;
-        new_board.printBoard();
         if (operation_result == Result::Wrong)
         {
             continue;
@@ -439,15 +461,6 @@ Result reduceElement(PuzzleBoard temp_board)
 
         if (operation_result == Result::Finish)
         {
-            return Result::Finish;
-        }
-
-        if (new_board.totalSizes == BOARD_SIZE * BOARD_SIZE)
-        {
-            finalBoard = new_board.board;
-
-            std::cout << "Final board *******************************************" << std::endl;
-            //new_board.printBoard();
             return Result::Finish;
         }
 
@@ -463,61 +476,49 @@ Result reduceElement(PuzzleBoard temp_board)
 
 std::vector<std::vector<int>> SolvePuzzle(const std::vector<int> &clues)
 {
-
-    std::cout << std::endl
-              << "Solve function" << std::endl;
-    std::vector<std::vector<int>> final_board;
-
     PuzzleBoard puzzle_board(clues);
     reduceElement(puzzle_board);
-    return final_board;
+    std::cout << "iteracje = " << iteration << std::endl;
+    std::cout << "iteracjeR = " << iterationr << std::endl;
+    return finalBoard;
 }
 
 int main()
 {
-    /* static std::vector<std::vector<int>> clues = {
-    {3, 2, 2, 3, 2, 1,
-     1, 2, 3, 3, 2, 2,
-     5, 1, 2, 2, 4, 3,
-     3, 2, 1, 2, 2, 4},
+    static std::vector<std::vector<int>> clues = {
+        {3, 2, 2, 3, 2, 1,
+         1, 2, 3, 3, 2, 2,
+         5, 1, 2, 2, 4, 3,
+         3, 2, 1, 2, 2, 4},
         {0, 0, 0, 2, 2, 0,
          0, 0, 0, 6, 3, 0,
          0, 4, 0, 0, 0, 0,
          4, 4, 0, 3, 0, 0},
-    {
-        0, 3, 0, 5, 3, 4,
-            0, 0, 0, 0, 0, 1,
-            0, 3, 0, 3, 2, 3,
-            3, 2, 0, 3, 1, 0
-    }
-};
+        {0, 3, 0, 5, 3, 4,
+         0, 0, 0, 0, 0, 1,
+         0, 3, 0, 3, 2, 3,
+         3, 2, 0, 3, 1, 0}};
 
-static std::vector<std::vector<std::vector<int>>> expected = {
-{{2, 1, 4, 3, 5, 6},
- {1, 6, 3, 2, 4, 5},
- {4, 3, 6, 5, 1, 2},
- {6, 5, 2, 1, 3, 4},
- {5, 4, 1, 6, 2, 3},
- {3, 2, 5, 4, 6, 1}},
-    {{5, 6, 1, 4, 3, 2},
-     {4, 1, 3, 2, 6, 5},
-     {2, 3, 6, 1, 5, 4},
-     {6, 5, 4, 3, 2, 1},
-     {1, 2, 5, 6, 4, 3},
-     {3, 4, 2, 5, 1, 6}},
-{
-    {5, 2, 6, 1, 4, 3},
-        {6, 4, 3, 2, 5, 1},
-        {3, 1, 5, 4, 6, 2},
-        {2, 6, 1, 5, 3, 4},
-        {4, 3, 2, 6, 1, 5},
-    {
-        1, 5, 4, 3, 2, 6
-    }
-}
-}
-;
-*/
+    static std::vector<std::vector<std::vector<int>>> expected = {
+        {{2, 1, 4, 3, 5, 6},
+         {1, 6, 3, 2, 4, 5},
+         {4, 3, 6, 5, 1, 2},
+         {6, 5, 2, 1, 3, 4},
+         {5, 4, 1, 6, 2, 3},
+         {3, 2, 5, 4, 6, 1}},
+        {{5, 6, 1, 4, 3, 2},
+         {4, 1, 3, 2, 6, 5},
+         {2, 3, 6, 1, 5, 4},
+         {6, 5, 4, 3, 2, 1},
+         {1, 2, 5, 6, 4, 3},
+         {3, 4, 2, 5, 1, 6}},
+        {{5, 2, 6, 1, 4, 3},
+         {6, 4, 3, 2, 5, 1},
+         {3, 1, 5, 4, 6, 2},
+         {2, 6, 1, 5, 3, 4},
+         {4, 3, 2, 6, 1, 5},
+         {1, 5, 4, 3, 2, 6}}};
+    /*
     static std::vector<int> clues0 =
         {3, 2, 2, 3, 2, 1,
          1, 2, 3, 3, 2, 2,
@@ -532,7 +533,7 @@ static std::vector<std::vector<std::vector<int>>> expected = {
 
     SolvePuzzle(clues0);
 
-    /*
+    
     PuzzleBoard test1({3, 2, 2, 3, 2, 1,
                        1, 2, 3, 3, 2, 2,
                        5, 1, 2, 2, 4, 3,
@@ -542,8 +543,12 @@ static std::vector<std::vector<std::vector<int>>> expected = {
                        0, 0, 0, 6, 3, 0,
                        0, 4, 0, 0, 0, 0,
                        4, 4, 0, 3, 0, 0});
-*/
-    //   assert(SolvePuzzle(clues[0]) == expected[0]);
-    //   assert(SolvePuzzle(clues[1]) == expected[1]);
-    //   assert(SolvePuzzle(clues[2]) == expected[2]);
+                       */
+
+    assert(SolvePuzzle(clues[0]) == expected[0]);
+
+    assert(SolvePuzzle(clues[1]) == expected[1]);
+    assert(SolvePuzzle(clues[2]) == expected[2]);
+
+    std::cout << "ok" << std::endl;
 }
