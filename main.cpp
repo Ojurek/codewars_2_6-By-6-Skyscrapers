@@ -275,36 +275,41 @@ bool PuzzleBoard::checkRow(int row)
     {
         return false;
     }
-
-    for (int i = 0; i < BOARD_SIZE; i++)
+    if (leftClue[row] > 0)
     {
-        if (board[row][i][0] > highestSeenBuilding)
+        for (int i = 0; i < BOARD_SIZE; i++)
         {
-            numberOfSeenBuildings++;
-            highestSeenBuilding = board[row][i][0];
+            if (board[row][i][0] > highestSeenBuilding)
+            {
+                numberOfSeenBuildings++;
+                highestSeenBuilding = board[row][i][0];
+            }
+        }
+
+        if (numberOfSeenBuildings != leftClue[row])
+        {
+            return false;
         }
     }
 
-    if (numberOfSeenBuildings != leftClue[row])
+    if (rightClue[row] > 0)
     {
-        return false;
-    }
+        highestSeenBuilding = 0;
+        numberOfSeenBuildings = 0;
 
-    highestSeenBuilding = 0;
-    numberOfSeenBuildings = 0;
-
-    for (int i = (BOARD_SIZE - 1); i >= 0; i--)
-    {
-        if (board[row][i][0] > highestSeenBuilding)
+        for (int i = (BOARD_SIZE - 1); i >= 0; i--)
         {
-            numberOfSeenBuildings++;
-            highestSeenBuilding = board[row][i][0];
+            if (board[row][i][0] > highestSeenBuilding)
+            {
+                numberOfSeenBuildings++;
+                highestSeenBuilding = board[row][i][0];
+            }
         }
-    }
 
-    if (numberOfSeenBuildings != rightClue[row])
-    {
-        return false;
+        if (numberOfSeenBuildings != rightClue[row])
+        {
+            return false;
+        }
     }
 
     return true;
@@ -326,37 +331,42 @@ bool PuzzleBoard::checkColumn(int column)
         return false;
     }
 
-    for (int i = 0; i < BOARD_SIZE; i++)
+    if (upperClue[column] > 0)
     {
-        if (board[i][column][0] > highestSeenBuilding)
+        for (int i = 0; i < BOARD_SIZE; i++)
         {
-            numberOfSeenBuildings++;
-            highestSeenBuilding = board[i][column][0];
+            if (board[i][column][0] > highestSeenBuilding)
+            {
+                numberOfSeenBuildings++;
+                highestSeenBuilding = board[i][column][0];
+            }
+        }
+
+        if (numberOfSeenBuildings != upperClue[column])
+        {
+            return false;
         }
     }
 
-    if (numberOfSeenBuildings != upperClue[column])
+    if (downClue[column] > 0)
     {
-        return false;
-    }
+        highestSeenBuilding = 0;
+        numberOfSeenBuildings = 0;
 
-    highestSeenBuilding = 0;
-    numberOfSeenBuildings = 0;
-
-    for (int i = (BOARD_SIZE - 1); i >= 0; i--)
-    {
-        if (board[i][column][0] > highestSeenBuilding)
+        for (int i = (BOARD_SIZE - 1); i >= 0; i--)
         {
-            numberOfSeenBuildings++;
-            highestSeenBuilding = board[i][column][0];
+            if (board[i][column][0] > highestSeenBuilding)
+            {
+                numberOfSeenBuildings++;
+                highestSeenBuilding = board[i][column][0];
+            }
+        }
+
+        if (numberOfSeenBuildings != downClue[column])
+        {
+            return false;
         }
     }
-
-    if (numberOfSeenBuildings != downClue[column])
-    {
-        return false;
-    }
-
     return true;
 }
 
@@ -374,8 +384,6 @@ void PuzzleBoard::finish()
         finalBoard.push_back(myRow);
         myRow.clear();
     }
-    std::cout << "Final board inside finish*******************************************" << std::endl;
-    std::cout << " size of final board: " << finalBoard.size() << std::endl;
     printBoard();
 }
 
@@ -419,8 +427,6 @@ void PuzzleBoard::printBoard()
 
 Result reduceElement(PuzzleBoard temp_board)
 {
-    if (iterationr > 2554)
-        temp_board.printBoard();
     iterationr++;
     int sizes_in_field;
     int row;
